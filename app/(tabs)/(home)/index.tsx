@@ -13,8 +13,19 @@ import MovieCard from "@/components/MovieCard";
 import { movies } from "@/mock-data";
 import ContinueWatchingMovieCard from "@/components/ContinueWatchingMovieCard";
 import SectionHeader from "@/components/SectionHeader";
+import { useFetch } from "@/hooks/useFetch";
 
 const HomeScreen = () => {
+  const {data, error, loading} = useFetch("/discover/movie", {
+    include_adult: false,
+    include_video: false,
+    language: "en-US",
+    page: 1,
+    sort_by: "popularity.desc",
+  });
+
+  console.log("data >> ", data);
+
   return (
     <View style={styles.container}>
       <ScrollView>
