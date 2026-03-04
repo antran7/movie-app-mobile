@@ -1,19 +1,38 @@
 import {
   FlatList,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import React from "react";
+import React, { useState } from "react";
 import Colors from "@/constants/colors";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { movies } from "@/mock-data";
 import MovieCard from "@/components/MovieCard";
 import FilterItem from "@/components/FilterItem";
+import { useFetch } from "@/hooks/useFetch";
+import { Movie } from "../types";
 
 const MovieScreen = () => {
+  const [page, setPage] = useState(1);
+  const params = {
+    include_adult: false,
+    include_video: false,
+    language: "en-US",
+    page,
+    sort_by: "popularity.desc",
+  };
+
+  const { data, loading } = useFetch("/discover/movie", params);
+  const movies: Movie[] = data?.results;
+  const handleRefresh = () => {
+    const randomPage = Math.floor(Math.random() * 10) + 1;
+    setPage(randomPage);
+  };
+
   return (
     <View style={styles.container}>
       <View
@@ -38,13 +57,21 @@ const MovieScreen = () => {
         </TouchableOpacity>
       </View>
 
-      <FlatList
-        data={movies}
-        renderItem={({ item }) => (
-          <MovieCard genre={item.genre} title={item.title} image={item.image} />
-        )}
-        numColumns={3}
-      />
+      <View style={{ flex: 1 }}>
+        <FlatList
+          data={movies}
+          renderItem={({ item }) => <MovieCard movie={item} />}
+          numColumns={3}
+          refreshControl={
+            <RefreshControl
+              refreshing={loading}
+              onRefresh={handleRefresh}
+              colors={[Colors.gray]}
+              tintColor={Colors.gray}
+            />
+          }
+        />
+      </View>
     </View>
   );
 };
