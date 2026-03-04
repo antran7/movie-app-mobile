@@ -4,13 +4,22 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Colors from "@/constants/colors";
 import { Feather, FontAwesome5 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { Movie } from "@/app/types";
+import { TMDB_IMAGE_BASE_PATH } from "@/hooks/useFetch";
+import { default_image } from "@/app/utils/assets";
+import { getGenreString } from "@/app/utils/genres";
 
-const OverViewSection = () => {
+const OverViewSection = ({ movie }: { movie: Movie | null }) => {
+  const backdrop_image = movie?.backdrop_path
+    ? `${TMDB_IMAGE_BASE_PATH}${movie?.backdrop_path}`
+    : null;
+  const yearRelease = movie?.release_date?.split("-")[0] ?? "";
+
   return (
     <View style={styles.overview}>
       <Image
         style={styles.overviewImage}
-        source={require("@/assets/images/overview.png")}
+        source={backdrop_image ? { uri: backdrop_image } : default_image}
       />
 
       {/* Image Overlay */}
@@ -60,15 +69,17 @@ const OverViewSection = () => {
               numberOfLines={1}
               style={{ fontSize: 26, fontWeight: "600", color: Colors.text }}
             >
-              The Sandman
+              {movie?.original_title}
             </Text>
-            <TouchableOpacity activeOpacity={0.8} style={styles.playbtn}>
-              <FontAwesome5 name="play" size={24} color={Colors.text} />
-            </TouchableOpacity>
+            <View style={{ width: 75, alignItems: "flex-end" }}>
+              <TouchableOpacity activeOpacity={0.8} style={styles.playbtn}>
+                <FontAwesome5 name="play" size={24} color={Colors.text} />
+              </TouchableOpacity>
+            </View>
           </View>
 
           <Text style={{ color: Colors.gray }}>
-            2025 | Monster Horror | Sci-fi Epic
+            {`${yearRelease} | ${getGenreString(movie?.genre_ids || [])}`}
           </Text>
         </LinearGradient>
       </View>

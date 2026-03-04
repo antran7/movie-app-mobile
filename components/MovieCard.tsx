@@ -10,22 +10,21 @@ import React from "react";
 import { hs, ms, vs } from "@/screen-dimensions";
 import Colors from "@/constants/colors";
 import { useRouter } from "expo-router";
+import { TMDB_IMAGE_BASE_PATH } from "@/hooks/useFetch";
+import { Movie } from "@/app/types";
+import { default_image } from "@/app/utils/assets";
+import { getGenreString } from "@/app/utils/genres";
 
-interface MovieCardProps {
-  image?: ImageSourcePropType | undefined;
-  title: string;
-  genre: string;
-}
-
-const MovieCard = ({ genre, title, image }: MovieCardProps) => {
+const MovieCard = ({ movie }: { movie: Movie }) => {
 
   const router = useRouter();
+  const tmdb_image_path = movie ? `${TMDB_IMAGE_BASE_PATH}${movie?.poster_path}` : null;
 
   return (
     <TouchableOpacity onPress={() => router.push("/details")} activeOpacity={0.8} style={styles.container}>
       <Image
         style={styles.image}
-        source={image}
+        source={tmdb_image_path ? {uri: tmdb_image_path} : default_image}
       />
 
       <View>
@@ -33,13 +32,13 @@ const MovieCard = ({ genre, title, image }: MovieCardProps) => {
           numberOfLines={1}
           style={{ color: Colors.text, fontWeight: "600", fontSize: ms(14) }}
         >
-          {title}
+          {movie?.original_title || movie?.original_name}
         </Text>
         <Text
           numberOfLines={1}
           style={{ color: Colors.gray, fontSize: ms(10) }}
         >
-          {genre}
+          {getGenreString(movie?.genre_ids || [])}
         </Text>
       </View>
     </TouchableOpacity>

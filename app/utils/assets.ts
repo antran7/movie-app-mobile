@@ -1,0 +1,1 @@
+export const default_image = require("@/assets/images/blank_image.jpg");

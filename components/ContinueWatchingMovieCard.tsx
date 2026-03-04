@@ -11,18 +11,13 @@ import React from "react";
 import { hs, ms, vs } from "@/screen-dimensions";
 import Colors from "@/constants/colors";
 import { FontAwesome5 } from "@expo/vector-icons";
+import { Movie } from "@/app/types";
+import { TMDB_IMAGE_BASE_PATH } from "@/hooks/useFetch";
+import { default_image } from "@/app/utils/assets";
+import { getGenreString } from "@/app/utils/genres";
 
-interface ContinueWatchingMovieCardProps {
-  image?: ImageSourcePropType | undefined;
-  title: string;
-  genre: string;
-}
 
-const ContinueWatchingMovieCard = ({
-  genre,
-  title,
-  image,
-}: ContinueWatchingMovieCardProps) => {
+const ContinueWatchingMovieCard = ({ movie }: { movie: Movie }) => {
   const getRandomPercentage = (): DimensionValue => {
     const min = 10;
     const max = 100;
@@ -31,15 +26,18 @@ const ContinueWatchingMovieCard = ({
   };
 
   const randomPercentage = getRandomPercentage();
+  const tmdb_image_path = movie ? `${TMDB_IMAGE_BASE_PATH}${movie?.backdrop_path}` : null;
 
   return (
     <View style={styles.container}>
       <View style={{ position: "relative" }}>
-        <TouchableOpacity style={styles.pressplay}>
-          <FontAwesome5 name="play" size={24} color={"#202020"} />
+        <TouchableOpacity activeOpacity={0.8} style={styles.pressplay}>
+          <View style={styles.playbtn}>
+            <FontAwesome5 name="play" size={24} color={"#202020"} />
+          </View>
         </TouchableOpacity>
 
-        <Image source={image} style={styles.image} />
+        <Image source={tmdb_image_path ? { uri: tmdb_image_path } : default_image} style={styles.image} />
 
         <View style={styles.progressbarcontainer}>
           <View style={[styles.progress, { width: randomPercentage }]} />
@@ -47,12 +45,15 @@ const ContinueWatchingMovieCard = ({
       </View>
 
       <View style={{ marginTop: 8 }}>
-        <Text numberOfLines={1} style={{color: Colors.text, fontWeight: "600", fontSize: 16}}>
-            {title}
+        <Text
+          numberOfLines={1}
+          style={{ color: Colors.text, fontWeight: "600", fontSize: 16 }}
+        >
+          {movie?.original_title || movie.original_name}
         </Text>
 
-        <Text numberOfLines={1} style={{color: Colors.gray, fontSize: 12}}>
-            {genre}
+        <Text numberOfLines={1} style={{ color: Colors.gray, fontSize: 12 }}>
+          {getGenreString(movie?.genre_ids || [])}
         </Text>
       </View>
     </View>
@@ -94,4 +95,12 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     borderRadius: 4,
   },
+  playbtn: {
+    height: 60,
+    width: 60,
+    borderRadius: "50%",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.text,
+  }
 });
