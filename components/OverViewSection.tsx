@@ -8,8 +8,10 @@ import { Movie } from "@/app/types";
 import { TMDB_IMAGE_BASE_PATH } from "@/hooks/useFetch";
 import { default_image } from "@/app/utils/assets";
 import { getGenreString } from "@/app/utils/genres";
+import { useRouter } from "expo-router";
 
 const OverViewSection = ({ movie }: { movie: Movie | null }) => {
+  const router = useRouter();
   const backdrop_image = movie?.backdrop_path
     ? `${TMDB_IMAGE_BASE_PATH}${movie?.backdrop_path}`
     : null;
@@ -40,7 +42,7 @@ const OverViewSection = ({ movie }: { movie: Movie | null }) => {
               </View>
             </View>
 
-            <TouchableOpacity style={styles.searchWrapper} activeOpacity={0.8}>
+            <TouchableOpacity onPress={() => router.push("/search")} style={styles.searchWrapper} activeOpacity={0.8}>
               <Feather name="search" size={24} color={Colors.text} />
             </TouchableOpacity>
           </View>

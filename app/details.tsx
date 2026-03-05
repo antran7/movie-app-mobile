@@ -10,23 +10,42 @@ import {
 import React from "react";
 import Colors from "@/constants/colors";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { AntDesign, Feather, FontAwesome5, Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import AppButton from "@/components/AppButton";
 import SectionHeader from "@/components/SectionHeader";
 import { movies } from "@/mock-data";
 import MovieCard from "@/components/MovieCard";
+import { getGenreString } from "./utils/genres";
+import { TMDB_IMAGE_BASE_PATH, useFetch } from "@/hooks/useFetch";
+import { default_image } from "./utils/assets";
+import { Movie } from "./types";
 
 const DetailsScreen = () => {
   const router = useRouter();
+  const {title, backdrop_path, date, generate_ids, overview} = useLocalSearchParams<any>();
+  const yearReleased = date?.split("-")[0] ?? "";
+  const backdrop_image = backdrop_path ? `${TMDB_IMAGE_BASE_PATH}${backdrop_path}` : null;
+
+  const params = {
+    include_adult: false,
+    include_video: false,
+    language: "en-US",
+    page: 3,
+    sort_by: "popularity.desc",
+  };
+
+  const {data} = useFetch("/discover/movie", params)
+  const similarMovies: Movie[] = data?.results
+
   return (
     <View style={styles.container}>
       <ScrollView>
         <View style={styles.overview}>
           <Image
             style={styles.overviewImage}
-            source={require("@/assets/images/overview.png")}
+            source={backdrop_image ? {uri: backdrop_image} : default_image}
           />
 
           <SafeAreaView style={styles.cover}>
@@ -48,11 +67,11 @@ const DetailsScreen = () => {
                 numberOfLines={1}
                 style={{ fontSize: 26, fontWeight: "600", color: Colors.text }}
               >
-                The Sandman
+                {title}
               </Text>
 
               <Text style={{ color: Colors.gray }}>
-                2025 | Monster Horror | Sci-fi Epic
+                {`${yearReleased} | ${getGenreString(generate_ids.split(",") || [])}`}
               </Text>
               <View style={{ flexDirection: "row", alignItems: "center" }}>
                 <AntDesign name="star" size={16} color={"#FF891B"} />
@@ -109,10 +128,7 @@ const DetailsScreen = () => {
               Overview
             </Text>
             <Text style={{ color: Colors.text, marginTop: 10, fontSize: 12 }}>
-              Lorem ipsum dolor, sit amet consectetur adipisicing elit. Sit
-              laudantium sequi ea facere officiis vel dignissimos atque rem
-              molestias. Adipisci consequatur impedit fuga enim odio ex quas ut
-              eos recusandae.
+              {overview}
             </Text>
           </View>
         </View>
@@ -120,12 +136,10 @@ const DetailsScreen = () => {
         <View style={{ marginVertical: 20 }}>
           <SectionHeader title="Trending now 🔥" />
           <FlatList
-            data={movies}
+            data={similarMovies || []}
             renderItem={({ item }) => (
               <MovieCard
-                genre={item.genre}
-                title={item.title}
-                image={item.image}
+                movie={item}
               />
             )}
             horizontal

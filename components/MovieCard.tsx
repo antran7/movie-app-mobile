@@ -16,15 +16,29 @@ import { default_image } from "@/app/utils/assets";
 import { getGenreString } from "@/app/utils/genres";
 
 const MovieCard = ({ movie }: { movie: Movie }) => {
-
   const router = useRouter();
-  const tmdb_image_path = movie ? `${TMDB_IMAGE_BASE_PATH}${movie?.poster_path}` : null;
+  const tmdb_image_path = movie
+    ? `${TMDB_IMAGE_BASE_PATH}${movie?.poster_path}`
+    : null;
 
   return (
-    <TouchableOpacity onPress={() => router.push("/details")} activeOpacity={0.8} style={styles.container}>
+    <TouchableOpacity
+      onPress={() => router.push({
+        pathname: "/details",
+        params: {
+          title: movie?.original_title || movie?.original_name,
+          backdrop_path: movie?.backdrop_path,
+          date: movie?.release_date,
+          generate_ids: movie?.genre_ids,
+          overview: movie?.overview,
+        }
+      })}
+      activeOpacity={0.8}
+      style={styles.container}
+    >
       <Image
         style={styles.image}
-        source={tmdb_image_path ? {uri: tmdb_image_path} : default_image}
+        source={tmdb_image_path ? { uri: tmdb_image_path } : default_image}
       />
 
       <View>
