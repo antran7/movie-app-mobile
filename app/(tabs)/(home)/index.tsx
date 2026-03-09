@@ -5,12 +5,12 @@ import {
   Text,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Colors from "@/constants/colors";
 import OverViewSection from "@/components/OverViewSection";
-import MovieCard from "@/components/MovieCard";
-import { movies } from "@/mock-data";
+import AnimatedMovieCard from "@/components/AnimatedMovieCard";
 import ContinueWatchingMovieCard from "@/components/ContinueWatchingMovieCard";
 import SectionHeader from "@/components/SectionHeader";
 import { useFetch } from "@/hooks/useFetch";
@@ -36,8 +36,10 @@ const HomeScreen = () => {
   };
 
   const { data: trendingData, loading: trendingLoading } = useFetch(
-    "/discover/movie",
-    params,
+    "/trending/movie/day",
+    { 
+      language: "en-US"
+    },
   );
 
   const { data: newReleasesData, loading: newReleasesLoading } = useFetch(
@@ -64,8 +66,6 @@ const HomeScreen = () => {
 
   const overviewMovie = getRandomMovie(trendingMovies);
 
-  console.log("data >>", newReleasesData);
-
   return (
     <View style={styles.container}>
       <ScrollView>
@@ -75,7 +75,9 @@ const HomeScreen = () => {
           <SectionHeader title="Trending now 🔥" />
           <FlatList
             data={trendingMovies}
-            renderItem={({ item }) => <MovieCard movie={item} />}
+            renderItem={({ item, index }) => (
+              <AnimatedMovieCard movie={item} itemIndex={index} />
+            )}
             horizontal
           />
         </View>
@@ -95,7 +97,9 @@ const HomeScreen = () => {
           <SectionHeader title="New Releases 🚀" />
           <FlatList
             data={newReleasesMovies}
-            renderItem={({ item }) => <MovieCard movie={item} />}
+            renderItem={({ item, index }) => (
+              <AnimatedMovieCard movie={item} itemIndex={index} />
+            )}
             horizontal
           />
         </View>
@@ -104,7 +108,9 @@ const HomeScreen = () => {
           <SectionHeader title="International Picks 🚀" />
           <FlatList
             data={internationalPicksMovies}
-            renderItem={({ item }) => <MovieCard movie={item} />}
+            renderItem={({ item, index }) => (
+              <AnimatedMovieCard movie={item} itemIndex={index} />
+            )}
             horizontal
           />
         </View>

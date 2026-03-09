@@ -3,21 +3,23 @@ import {
   RefreshControl,
   ScrollView,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Colors from "@/constants/colors";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { movies } from "@/mock-data";
-import MovieCard from "@/components/MovieCard";
 import FilterItem from "@/components/FilterItem";
 import { useFetch } from "@/hooks/useFetch";
 import { Movie } from "../types";
+import AnimatedMovieCard from "@/components/AnimatedMovieCard";
 
 const MovieScreen = () => {
   const [page, setPage] = useState(1);
+  const [allMovies, setAllMovies] = useState<Movie[]>([]);
+  const [loadingMore, setLoadingMore] = useState(false);
+
   const params = {
     include_adult: false,
     include_video: false,
@@ -27,10 +29,38 @@ const MovieScreen = () => {
   };
 
   const { data, loading } = useFetch("/discover/movie", params);
-  const movies: Movie[] = data?.results;
+
+  // Merge data khi page thay đổi
+  useEffect(() => {
+    if (data?.results) {
+      if (page === 1) {
+        // Trang đầu tiên, replace data
+        setAllMovies(data.results);
+      } else {
+        // Trang tiếp theo, merge với data cũ
+        setAllMovies((prev) => [...prev, ...data.results]);
+      }
+      setLoadingMore(false);
+    }
+  }, [data, page]);
+
   const handleRefresh = () => {
-    const randomPage = Math.floor(Math.random() * 10) + 1;
-    setPage(randomPage);
+    setPage(1); // Reset về trang 1
+  };
+
+  const handleLoadMore = () => {
+    if (!loadingMore && !loading) {
+      setLoadingMore(true);
+      setPage((prev) => prev + 1);
+    }
+  };
+
+  const renderFooter = () => {
+    return loadingMore ? (
+      <View style={styles.loader}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    ) : null;
   };
 
   return (
@@ -59,12 +89,17 @@ const MovieScreen = () => {
 
       <View style={{ flex: 1 }}>
         <FlatList
-          data={movies}
-          renderItem={({ item }) => <MovieCard movie={item} />}
+          data={allMovies}
+          renderItem={({ item, index }) => (
+            <AnimatedMovieCard movie={item} itemIndex={index} />
+          )}
           numColumns={3}
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={renderFooter}
           refreshControl={
             <RefreshControl
-              refreshing={loading}
+              refreshing={loading && page === 1}
               onRefresh={handleRefresh}
               colors={[Colors.gray]}
               tintColor={Colors.gray}
@@ -82,5 +117,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  loader: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 20,
   },
 });
