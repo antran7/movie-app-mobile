@@ -1,16 +1,20 @@
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import React from "react";
-import { Tabs } from "expo-router";
+import { router, Tabs } from "expo-router";
 import Colors from "@/constants/colors";
 import { Feather, MaterialCommunityIcons, Octicons } from "@expo/vector-icons";
 
-const RightIcon = ({icon}: {icon?: any}) => {
+const RightIcon = ({ icon, onPress }: { icon?: any; onPress?: () => void }) => {
   return (
-    <TouchableOpacity activeOpacity={0.8} style={styles.righticonwrapper}>
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.8}
+      style={styles.righticonwrapper}
+    >
       {icon ? icon : <Feather name="search" size={24} color={Colors.text} />}
     </TouchableOpacity>
-  )
-}
+  );
+};
 
 const TabLayout = () => {
   return (
@@ -41,12 +45,12 @@ const TabLayout = () => {
             <Feather name="play-circle" size={20} color={color} />
           ),
           tabBarLabel: "Movies",
-          headerStyle: { backgroundColor: Colors.background},
+          headerStyle: { backgroundColor: Colors.background },
           headerTitle: "",
           headerRight: () => {
-            return <RightIcon />
+            return <RightIcon onPress={() => router.push("/search")} />;
           },
-          headerLeft: () => <Text style={styles.title}>Movies</Text>
+          headerLeft: () => <Text style={styles.title}>Movies</Text>,
         }}
       />
       <Tabs.Screen
@@ -56,12 +60,12 @@ const TabLayout = () => {
             <Feather name="folder" size={20} color={color} />
           ),
           tabBarLabel: "TV/Series",
-          headerStyle: { backgroundColor: Colors.background},
+          headerStyle: { backgroundColor: Colors.background },
           headerTitle: "",
           headerRight: () => {
-            return <RightIcon />
+            return <RightIcon onPress={() => router.push("/search")} />;
           },
-          headerLeft: () => <Text style={styles.title}>Tv Series</Text>
+          headerLeft: () => <Text style={styles.title}>Tv Series</Text>,
         }}
       />
       <Tabs.Screen
@@ -74,9 +78,20 @@ const TabLayout = () => {
           headerStyle: { backgroundColor: Colors.background },
           headerTitle: "",
           headerRight: () => {
-            return <RightIcon icon={<MaterialCommunityIcons name="cog-outline" size={24} color={Colors.text} />} />
+            return (
+              <RightIcon
+                icon={
+                  <MaterialCommunityIcons
+                    name="cog-outline"
+                    size={24}
+                    color={Colors.text}
+                  />
+                }
+                onPress={() => {}}
+              />
+            );
           },
-          headerLeft: () => <Text style={styles.title}>Profile</Text>
+          headerLeft: () => <Text style={styles.title}>Profile</Text>,
         }}
       />
     </Tabs>
@@ -100,5 +115,5 @@ const styles = StyleSheet.create({
     marginLeft: 14,
     fontWeight: "600",
     fontSize: 24,
-  }
+  },
 });
