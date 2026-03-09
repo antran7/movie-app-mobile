@@ -1,4 +1,5 @@
 import {
+  Animated,
   FlatList,
   Image,
   ScrollView,
@@ -7,26 +8,85 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Colors from "@/constants/colors";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { AntDesign, Feather, FontAwesome5, Ionicons } from "@expo/vector-icons";
+import { AntDesign, Feather, FontAwesome5, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import AppButton from "@/components/AppButton";
 import SectionHeader from "@/components/SectionHeader";
-import { movies } from "@/mock-data";
-import MovieCard from "@/components/MovieCard";
+import AnimatedMovieCard from "@/components/AnimatedMovieCard";
 import { getGenreString } from "./utils/genres";
 import { TMDB_IMAGE_BASE_PATH, useFetch } from "@/hooks/useFetch";
 import { default_image } from "./utils/assets";
 import { Movie } from "./types";
+import { useFavorites } from "@/hooks/useFavorites";
+import Toast from 'react-native-toast-message';
 
 const DetailsScreen = () => {
   const router = useRouter();
-  const {title, backdrop_path, date, generate_ids, overview} = useLocalSearchParams<any>();
+  const { title, backdrop_path, date, generate_ids, overview, rating, id } =
+    useLocalSearchParams<any>();
   const yearReleased = date?.split("-")[0] ?? "";
-  const backdrop_image = backdrop_path ? `${TMDB_IMAGE_BASE_PATH}${backdrop_path}` : null;
+  const backdrop_image = backdrop_path
+    ? `${TMDB_IMAGE_BASE_PATH}${backdrop_path}`
+    : null;
+
+  const { addFavorite, isFavorite, favorites } = useFavorites();
+  const movieId = parseInt(id as string);
+  const [isFav, setIsFav] = useState(false);
+
+  // Update isFav state when favorites changes
+  useEffect(() => {
+    setIsFav(isFavorite(movieId));
+  }, [favorites, movieId, isFavorite]);
+
+  // Reconstruct movie object for saving
+  const currentMovie: Movie = {
+    id: movieId,
+    title: title as string,
+    original_title: title as string,
+    backdrop_path: backdrop_path as string,
+    poster_path: backdrop_path as string,
+    overview: overview as string,
+    release_date: date as string,
+    genre_ids: (generate_ids as string).split(",").map(Number),
+  } as Movie;
+
+   //Animation toast
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handleSaveMovie = async () => {
+    console.log("Save clicked - currentMovie id:", currentMovie.id);
+    if (isNaN(movieId)) {
+      console.log("Error: movieId is NaN - id param:", id);
+      return;
+    }
+
+    Animated.sequence([
+      Animated.timing(scaleAnim, {
+        toValue: 1.3,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    await addFavorite(currentMovie);
+    console.log("Movie saved");
+    Toast.show({
+      type: isFav ? 'info' : 'success',
+      position: 'top',
+      text1: isFav ? 'Removed from favourites' : 'Added to favourites',
+      text2: `Movie: ${title}`,
+      visibilityTime: 2000,
+    })
+  };
 
   const params = {
     include_adult: false,
@@ -36,8 +96,8 @@ const DetailsScreen = () => {
     sort_by: "popularity.desc",
   };
 
-  const {data} = useFetch("/discover/movie", params)
-  const similarMovies: Movie[] = data?.results
+  const { data } = useFetch("/discover/movie", params);
+  const similarMovies: Movie[] = data?.results;
 
   return (
     <View style={styles.container}>
@@ -45,7 +105,7 @@ const DetailsScreen = () => {
         <View style={styles.overview}>
           <Image
             style={styles.overviewImage}
-            source={backdrop_image ? {uri: backdrop_image} : default_image}
+            source={backdrop_image ? { uri: backdrop_image } : default_image}
           />
 
           <SafeAreaView style={styles.cover}>
@@ -78,7 +138,7 @@ const DetailsScreen = () => {
                 <Text
                   style={{ color: "#FF891B", fontWeight: "600", marginLeft: 6 }}
                 >
-                  9.5
+                  {Math.round(rating*10)/10}
                 </Text>
               </View>
             </LinearGradient>
@@ -100,13 +160,28 @@ const DetailsScreen = () => {
           </View>
 
           <View style={styles.btnwrapper}>
-            <TouchableOpacity
-              activeOpacity={0.6}
-              style={{ alignItems: "center" }}
-            >
-              <Feather name="bookmark" size={16} color={Colors.text} />
-              <Text style={{ fontSize: 10, color: Colors.text }}>Save</Text>
-            </TouchableOpacity>
+            <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+              <TouchableOpacity
+                activeOpacity={0.6}
+                style={{ alignItems: "center" }}
+                onPress={handleSaveMovie}
+              >
+                <MaterialCommunityIcons
+                  name={isFav ? "bookmark" : "bookmark-outline"}
+                  size={18}
+                  color={isFav ? Colors.icon : Colors.text}
+                  fill={isFav ? Colors.icon : "none"}
+                />
+                <Text
+                  style={{
+                    fontSize: 10,
+                    color: isFav ? Colors.icon : Colors.text,
+                  }}
+                >
+                  {isFav ? "Saved" : "Save"}
+                </Text>
+              </TouchableOpacity>
+            </Animated.View>
 
             <TouchableOpacity
               activeOpacity={0.6}
@@ -137,10 +212,8 @@ const DetailsScreen = () => {
           <SectionHeader title="Trending now 🔥" />
           <FlatList
             data={similarMovies || []}
-            renderItem={({ item }) => (
-              <MovieCard
-                movie={item}
-              />
+            renderItem={({ item, index }) => (
+              <AnimatedMovieCard movie={item} itemIndex={index} />
             )}
             horizontal
           />

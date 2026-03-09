@@ -26,11 +26,13 @@ const MovieCard = ({ movie }: { movie: Movie }) => {
       onPress={() => router.push({
         pathname: "/details",
         params: {
+          id: movie?.id,
           title: movie?.original_title || movie?.original_name,
           backdrop_path: movie?.backdrop_path,
           date: movie?.release_date,
           generate_ids: movie?.genre_ids,
           overview: movie?.overview,
+          rating: movie?.vote_average,
         }
       })}
       activeOpacity={0.8}

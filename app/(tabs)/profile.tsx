@@ -5,17 +5,27 @@ import {
   StyleSheet,
   Text,
   View,
+  ActivityIndicator,
 } from "react-native";
-import React from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import Colors from "@/constants/colors";
 import { ms } from "@/screen-dimensions";
 import SectionHeader from "@/components/SectionHeader";
-import { movies } from "@/mock-data";
-import MovieCard from "@/components/MovieCard";
 import { useFetch } from "@/hooks/useFetch";
 import { Movie } from "../types";
+import AnimatedMovieCard from "@/components/AnimatedMovieCard";
+import { useFavorites } from "@/hooks/useFavorites";
+import { useFocusEffect } from "expo-router";
 
 const ProfileScreen = () => {
+  const { favorites, loading, loadFavorites } = useFavorites();
+
+  useFocusEffect(
+    useCallback(() => {
+      loadFavorites();
+    }, [])
+  )
+
   const params = {
     include_adult: false,
     include_video: false,
@@ -59,6 +69,33 @@ const ProfileScreen = () => {
             fontWeight: "600",
             fontSize: 16,
             marginHorizontal: 12,
+            marginTop: 16,
+          }}
+        >
+          Favorite Movies ❤️
+        </Text>
+
+        {favorites && favorites.length > 0 ? (
+          <FlatList
+            data={favorites || []}
+            renderItem={({ item, index }) => (
+              <AnimatedMovieCard movie={item} itemIndex={index} />
+            )}
+            horizontal
+            style={{ marginVertical: 14 }}
+          />
+        ) : (
+          <Text style={{ color: Colors.gray, marginHorizontal: 12, marginVertical: 12 }}>
+            No favorite movies yet. Save your favorite movies!
+          </Text>
+        )}
+
+        <Text
+          style={{
+            color: Colors.primary,
+            fontWeight: "600",
+            fontSize: 16,
+            marginHorizontal: 12,
           }}
         >
           Watch History
@@ -68,7 +105,9 @@ const ProfileScreen = () => {
           <SectionHeader title="Yesterday" />
           <FlatList
             data={yesterdayMovies || []}
-            renderItem={({ item }) => <MovieCard movie={item} />}
+            renderItem={({ item, index }) => (
+              <AnimatedMovieCard movie={item} itemIndex={index} />
+            )}
             horizontal
           />
         </View>
@@ -77,7 +116,9 @@ const ProfileScreen = () => {
           <SectionHeader title="28th February, 2026" />
           <FlatList
             data={dateMovies || []}
-            renderItem={({ item }) => <MovieCard movie={item} />}
+            renderItem={({ item, index }) => (
+              <AnimatedMovieCard movie={item} itemIndex={index} />
+            )}
             horizontal
           />
         </View>
